@@ -34,7 +34,12 @@ nav {
 }
 
 nav img {
-    height: 60px;
+    height: 100%;
+    justify-content: center;
+    align-items: center;
+
+    margin: 0 auto;
+    padding: 5px;
 }
 
 /* Main container */
@@ -46,6 +51,7 @@ nav img {
     border-radius: 12px;
     box-shadow: 0 12px 25px rgba(0,0,0,0.12);
     transition: all 0.3s ease-in-out;
+
 }
 
 .container:hover {
@@ -96,12 +102,64 @@ nav img {
 .fc-toolbar-title { font-size: 20px !important; font-weight: 600; }
 .fc .fc-daygrid-event { border-radius: 6px; font-weight: 500; text-align: center; }
 
+
+/* Container for the calendar + booking details */
+.mainContainer {
+  display: flex;
+  justify-content: center; /* center the entire container horizontally */
+  align-items: flex-start; /* keep calendar and booking box aligned to top */
+  gap: 20px;
+  margin: 0 auto; /* center within page */
+  max-width: 1200px;
+}
+
+/* Calendar container */
+.container {
+  flex: 1; /* takes remaining space */
+}
+
+/* Booking details box */
+.bookingDetails {
+  width: 300px; /* smaller width */
+  background-color: #932F2F;
+  display: none;
+  color: #fff;
+  margin: 40px auto;
+  padding: 20px;
+  border-radius: 8px;
+  align-self: flex-start; /* align to top */
+}
+
+.bookingDetails h2 {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.bookingDetails label {
+    font-weight: bold;
+    display: block;
+    margin-top: 10px;
+}
+
+.bookingDetails p {
+    margin: 5px 0 10px 0;
+}   
 /* Mobile */
 @media(max-width:600px){
     .title { font-size: 22px; }
     .fc-toolbar-title { font-size: 16px !important; }
     .submitBtn { font-size: 16px; padding: 12px; }
     .intro { font-size: 14px; }
+    nav img {height: 60px; width: 100%;}
+     .mainContainer {
+    flex-direction: column; /* stack vertically */
+    margin: 10px;
+  }
+  .bookingDetails {
+    width: 100%; /* full width */
+    display: none;
+    
+  }
 }
 </style>
 </head>
@@ -110,109 +168,320 @@ nav img {
 
 <!-- Nav bar with centered logo -->
 <nav>
-    <img src="https://productivity.lk/templates/temp_2019/images/new/logo.png" alt="Logo">
+    <img src="https://productivity.lk/templates/temp_2019/images/new/logo.png" alt="Logo" >
    
 </nav>
+
 <!-- <div class="banner" style=" width: 100%; padding: 2px 2px; background-color: #ff9100; color: #fff; text-align: center; border-radius: 8px;"> -->
   
   <!-- Subtitle / Description -->
   <!-- <p style="margin: 10px 0 0; font-size: 18px; line-height: 1.5;">
 For more information, contact <a href="#">01111111</a>.  </p> -->
 <!-- </div> -->
-<div class="container">
+
+<div class="mainContainer">
+  <div class="container">
     <div class="title">Judge Booking Calendar</div>
     <div class="intro">
-        Welcome! Use this calendar to select available dates for judge bookings. You can choose multiple dates within the allowed range, and then submit your booking with your details. The system will ensure you do not exceed the maximum allowed selections.
+      Welcome! Use this calendar to select available dates for judge bookings. You can choose multiple dates within the allowed range, and then submit your booking with your details. The system will ensure you do not exceed the maximum allowed selections.
     </div>
     <div id="calendar"></div>
     <button class="submitBtn" id="submitBooking">Submit Booking</button>
+  </div>
+
+  <div id="bookingDetails" class="bookingDetails">
+    <h2>Booking Details</h2>
+    <label for="name">Name:</label>
+    <p id="nameDisplay"></p>
+
+    <label for="email">Email:</label>
+    <p id="emailDisplay"></p>
+
+    <label for="judgeMemberId">Judge Member Id:</label>
+    <p id="judgeMemberIdDisplay" ></p>
+
+    <label for="selectedDates" style="">Selected Dates:</label>
+    <p id="selectedDatesDisplay" style="font-weight: bold;  word-wrap: break-word;"></p>
+  </div>
 </div>
 
-
 <footer style="text-align:center; padding:20px; color:#555; font-size:14px;">
-  &copy; 2026 All rights reserved.
+ <!-- Developed by <a href="#">Vexora IT Solutions</a> -->
 </footer><script>
 document.addEventListener('DOMContentLoaded', function(){
+function showBookingDetails() {
+    if (localStorage.getItem('name') && localStorage.getItem('email') && localStorage.getItem('judgeMemberId')) {
+    document.getElementById('nameDisplay').innerText = localStorage.getItem('name');
+    document.getElementById('emailDisplay').innerText = localStorage.getItem('email');
+    document.getElementById('judgeMemberIdDisplay').innerText = localStorage.getItem('judgeMemberId');
+document.getElementById('selectedDatesDisplay').innerText =
+JSON.parse(localStorage.getItem('selectedDates')).join(', ');
 
-    let selectedDates = [];
-    const maxBooking = 20; // max allowed dates per user
-    const minDate = '2026-03-10'; // start of allowed range
-    const maxDate = '2026-03-20'; // end of allowed range
+document.getElementById('bookingDetails').style.display = 'block';
+}else{
+    document.getElementById('bookingDetails').style.display = 'none';
+}
+}
+   showBookingDetails();
+let selectedDates = [];
 
-    var calendar = new FullCalendar.Calendar(document.getElementById('calendar'),{
-        initialView:'dayGridMonth',
-        headerToolbar:{ left:'prev,next today', center:'title', right:'dayGridMonth' },
-        selectable: true,
-        validRange: { start: minDate, end: maxDate },
-        dateClick:function(info){
-            const clickedDate = info.dateStr;
+/* SETTINGS */
+const maxBooking = 30;
+const minDate = '2026-03-10';
+const maxDate = '2026-03-19';
 
-            if(clickedDate < minDate || clickedDate > maxDate){
-                Swal.fire({ icon:'warning', title:'Invalid Date', text:`Select between ${minDate} and ${maxDate}` });
-                return;
-            }
+/* WEEKLY DISABLE */
+const disableWeekDays = [0,6]; 
+// 0 = Sunday
+// 1 = Monday
+// 2 = Tuesday
+// 3 = Wednesday
+// 4 = Thursday
+// 5 = Friday
+// 6 = Saturday
 
-            if(!selectedDates.includes(clickedDate) && selectedDates.length >= maxBooking){
-                Swal.fire({ icon:'warning', title:'Limit Reached', text:`You can select up to ${maxBooking} dates only.` });
-                return;
-            }
+/* SPECIFIC DISABLED DATES */
+const disabledDates = [
+'2026-03-11',
 
-            if(selectedDates.includes(clickedDate)){
-                selectedDates = selectedDates.filter(d => d !== clickedDate);
-                calendar.getEvents().forEach(event => { if(event.startStr === clickedDate) event.remove(); });
-            } else {
-                selectedDates.push(clickedDate);
-                calendar.addEvent({ title: 'Selected', start: clickedDate, allDay: true, color: '#932F2F' });
-            }
+];
 
-            document.getElementById("submitBooking").style.display =
-                selectedDates.length > 0 ? "block" : "none";
-        }
-    });
+var calendar = new FullCalendar.Calendar(document.getElementById('calendar'),{
+    headerToolbar: {
+        left: 'prev,next',  
+             
+        center: 'title',
+        right: 'dayGridMonth'       
+    },
+validRange:{
+start:minDate,
+end: new Date(new Date(maxDate).setDate(new Date(maxDate).getDate() + 1))
 
-    calendar.render();
+},
 
-    document.getElementById("submitBooking").addEventListener("click", function(){
-        Swal.fire({
-            title:'Booking Details',
-            html:`
-                <input type="text" id="name" class="swal2-input" placeholder="Your Name" required>
-                <input type="email" id="email" class="swal2-input" placeholder="Email" required>
-                <input type="text" id="judgeNumber" class="swal2-input" placeholder="Judge Number" required>
-            `,
-            confirmButtonText:'Book',
-            showCancelButton:true,
-            preConfirm:()=>{
-                const name = document.getElementById('name').value;
-                const email = document.getElementById('email').value;
-                const judge = document.getElementById('judgeNumber').value;
-                if(!name || !email || !judge){ Swal.showValidationMessage("Please fill all fields"); }
-                return {name, email, judge};
-            }
-        }).then((result)=>{
-            if(result.isConfirmed){
-                fetch('https://npsjudge.app.n8n.cloud/webhook/4419b438-077f-4e8f-8458-2decd3c8793d',{
-                    method:'POST',
-                    headers:{ 'Content-Type':'application/json' },
-                    body: JSON.stringify({
-                        name: result.value.name,
-                        email: result.value.email,
-                        judge_number: result.value.judge,
-                        dates: selectedDates
-                    })
-                })
-                .then(res => {
-                    if(res.ok){
-                        Swal.fire("Success","Booking confirmed","success");
-                        selectedDates = [];
-                        calendar.getEvents().forEach(e => e.remove());
-                        document.getElementById("submitBooking").style.display="none";
-                    } else { Swal.fire("Error","Booking failed","error"); }
-                })
-                .catch(()=>Swal.fire("Error","Booking failed","error"));
-            }
-        });
-    });
+
+dateClick:function(info){
+
+const clickedDate = info.dateStr;
+const day = info.date.getDay();
+
+/* WEEKLY DISABLE */
+if(disableWeekDays.includes(day)){
+Swal.fire({
+icon:'warning',
+title:'Unavailable',
+text:'This weekday is not available for booking'
+});
+return;
+}
+
+/* SPECIFIC DATE DISABLE */
+if(disabledDates.includes(clickedDate)){
+
+Swal.fire({
+icon:'warning',
+title:'Unavailable',
+text:'This date is unavailable'
+});
+return;
+}
+
+/* LIMIT CHECK */
+if(!selectedDates.includes(clickedDate) && selectedDates.length >= maxBooking){
+Swal.fire({
+icon:'warning',
+title:'Limit Reached',
+text:`You can select maximum ${maxBooking} days`
+});
+return;
+}
+
+/* TOGGLE SELECT / REMOVE */
+
+if(selectedDates.includes(clickedDate)){
+
+selectedDates = selectedDates.filter(d => d !== clickedDate);
+
+calendar.getEvents().forEach(event=>{
+if(event.startStr === clickedDate){
+event.remove();
+}
+});
+
+}else{
+
+selectedDates.push(clickedDate);
+
+calendar.addEvent({
+title:'Selected',
+start:clickedDate,
+allDay:true,
+color:'#932F2F'
+});
+
+}
+
+/* SHOW SUBMIT BUTTON */
+
+document.getElementById("submitBooking").style.display =
+selectedDates.length > 0 ? "block" : "none";
+
+},
+dayCellDidMount: function(info){
+const date = info.date.getFullYear() + '-' +
+             String(info.date.getMonth() + 1).padStart(2, '0') + '-' +
+             String(info.date.getDate()).padStart(2, '0');    
+    const day = info.date.getDay();
+const currentDate = new Date(date);
+const min = new Date(minDate);
+const max = new Date(maxDate);
+
+// Check if currentDate is within range and not a disabled weekday
+if (currentDate >= min && currentDate <= max) {
+    const day = currentDate.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+    if (disableWeekDays.includes(day)) {
+  info.el.style.backgroundColor = "#ffdddd"; // red
+        info.el.style.color = "#a00";
+        info.el.style.pointerEvents = "none";
+        info.el.style.cursor = "not-allowed";
+      
+        // Make sure caption does not interfere with the date number
+        let caption = document.createElement("p");
+        caption.innerText = "Not Available";
+        caption.style.backgroundColor = "#ffdddd";
+        caption.style.position = "relative";
+        caption.style.fontSize = "10px";
+        caption.style.color = "red";
+        caption.style.textAlign = "center";
+        caption.style.marginTop = "-11px"; 
+        caption.style.display = "block";
+
+        // Append caption at the end of the cell so the date remains on top
+        info.el.appendChild(caption);    }
+}
+
+    
+
+    if(disabledDates.includes(date)){
+        
+        
+        info.el.style.backgroundColor = "#ffdddd"; // red
+        info.el.style.color = "#a00";
+        info.el.style.pointerEvents = "none";
+        info.el.style.cursor = "not-allowed";
+      
+        // Make sure caption does not interfere with the date number
+        let caption = document.createElement("p");
+        caption.innerText = "Unavailable";
+        caption.style.backgroundColor = "#ffdddd";
+        caption.style.position = "relative";
+        caption.style.fontSize = "10px";
+        caption.style.color = "red";
+        caption.style.textAlign = "center";
+        caption.style.marginTop = "-11px"; 
+        caption.style.display = "block";
+
+        // Append caption at the end of the cell so the date remains on top
+        info.el.appendChild(caption);
+    }
+}
+});
+
+calendar.render();
+
+/* SUBMIT BOOKING */
+
+document.getElementById("submitBooking").addEventListener("click", function(){
+
+Swal.fire({
+title:'Booking Details',
+html:`
+<input type="text" id="name" class="swal2-input" placeholder="Your Name" value="${localStorage.getItem('name') ? localStorage.getItem('name') : ''}" required>
+<input type="email" id="email" class="swal2-input" placeholder="Email" value="${localStorage.getItem('email') ? localStorage.getItem('email') : ''}" required>
+<input type="text" id="judgeNumber" class="swal2-input" placeholder="Judge Member Id" value="${localStorage.getItem('judgeMemberId') ? localStorage.getItem('judgeMemberId') : ''}" required>
+`,
+confirmButtonText:'Book',
+showCancelButton:true,
+
+preConfirm:()=>{
+
+const name=document.getElementById('name').value;
+const email=document.getElementById('email').value;
+const judge=document.getElementById('judgeNumber').value;
+  const d = new Date(); 
+  const hours12 = d.getHours() % 12 || 12; 
+  const minutes = String(d.getMinutes()).padStart(2,'0'); 
+  const ampm = d.getHours() >= 12 ? 'PM' : 'AM'; 
+  let CurrentTime = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${hours12}-${minutes} ${ampm}` 
+
+if(!name || !email || !judge){
+Swal.showValidationMessage("Please fill all fields");
+}
+
+return {name,email,judge,CurrentTime};
+
+}
+
+}).then((result)=>{
+
+if(result.isConfirmed){
+
+fetch('https://npsjudge.app.n8n.cloud/webhook-test/8bec9b74-f561-4c4c-89ba-d18d04e4ba67',{
+
+method:'POST',
+
+headers:{
+'Content-Type':'application/json'
+},
+
+body:JSON.stringify({
+name:result.value.name,
+email:result.value.email,
+judge_number:result.value.judge,
+dates:selectedDates,
+time:result.value.CurrentTime
+})
+
+})
+
+.then(res=>{
+
+if(res.ok){
+// Store values in localStorage
+localStorage.setItem('name', result.value.name);
+localStorage.setItem('email', result.value.email);
+localStorage.setItem('judgeMemberId', result.value.judge);
+// Convert selectedDates array to JSON string for storage
+localStorage.setItem('selectedDates', JSON.stringify(selectedDates));
+
+// After everything is successfully stored, display the booking details
+showBookingDetails();
+
+Swal.fire("Success","Booking confirmed","success");
+
+selectedDates=[];
+
+calendar.getEvents().forEach(e=>e.remove());
+
+document.getElementById("submitBooking").style.display="none";
+
+}else{
+
+Swal.fire("Error","Booking failed","error");
+
+}
+
+})
+
+.catch(()=>{
+Swal.fire("Error","Booking failed","error");
+});
+
+}
+
+});
+
+});
 
 });
 </script>
