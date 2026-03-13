@@ -81,7 +81,7 @@ nav img {
     width: 100%;
     padding: 14px;
     font-size: 18px;
-    background: #007BFF;
+    background: #932F2F;
     border: none;
     color: #fff;
     border-radius: 8px;
@@ -162,7 +162,7 @@ document.addEventListener('DOMContentLoaded', function(){
                 calendar.getEvents().forEach(event => { if(event.startStr === clickedDate) event.remove(); });
             } else {
                 selectedDates.push(clickedDate);
-                calendar.addEvent({ title: 'Selected', start: clickedDate, allDay: true, color: '#007BFF' });
+                calendar.addEvent({ title: 'Selected', start: clickedDate, allDay: true, color: '#932F2F' });
             }
 
             document.getElementById("submitBooking").style.display =
