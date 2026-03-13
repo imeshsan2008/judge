@@ -3,7 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>Judge Booking Calendar</title>
 
 <!-- FullCalendar CSS & JS -->
@@ -19,12 +18,29 @@
 body {
     font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
     background: #f0f2f5;
-    padding: 30px;
+    padding: 0;
 }
 
+/* Nav bar with logo centered */
+nav {
+    background-color: #932F2F;
+    height: 80px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+nav img {
+    height: 60px;
+}
+
+/* Main container */
 .container {
     max-width: 950px;
-    margin: auto;
+    margin: 40px auto;
     background: #fff;
     padding: 30px 25px;
     border-radius: 12px;
@@ -32,18 +48,34 @@ body {
     transition: all 0.3s ease-in-out;
 }
 
-.container:hover { transform: translateY(-2px); }
+.container:hover {
+    transform: translateY(-2px);
+}
 
+/* Title */
 .title {
     font-size: 28px;
     font-weight: 700;
     text-align: center;
     color: #333;
-    margin-bottom: 25px;
+    margin-bottom: 15px;
 }
 
-#calendar { margin-top: 10px; }
+/* Introduction section */
+.intro {
+    font-size: 16px;
+    color: #555;
+    margin-bottom: 30px;
+    line-height: 1.6;
+    text-align: center;
+}
 
+/* Calendar */
+#calendar {
+    margin-top: 10px;
+}
+
+/* Submit Button */
 .submitBtn {
     margin-top: 25px;
     width: 100%;
@@ -60,31 +92,46 @@ body {
 
 .submitBtn:hover { background: #0056b3; }
 
+/* FullCalendar customizations */
 .fc-toolbar-title { font-size: 20px !important; font-weight: 600; }
-
-.fc .fc-daygrid-event {
-    border-radius: 6px;
-    font-weight: 500;
-    text-align: center;
-}
+.fc .fc-daygrid-event { border-radius: 6px; font-weight: 500; text-align: center; }
 
 /* Mobile */
 @media(max-width:600px){
     .title { font-size: 22px; }
     .fc-toolbar-title { font-size: 16px !important; }
     .submitBtn { font-size: 16px; padding: 12px; }
+    .intro { font-size: 14px; }
 }
 </style>
 </head>
 
 <body>
+
+<!-- Nav bar with centered logo -->
+<nav>
+    <img src="https://productivity.lk/templates/temp_2019/images/new/logo.png" alt="Logo">
+   
+</nav>
+<!-- <div class="banner" style=" width: 100%; padding: 2px 2px; background-color: #ff9100; color: #fff; text-align: center; border-radius: 8px;"> -->
+  
+  <!-- Subtitle / Description -->
+  <!-- <p style="margin: 10px 0 0; font-size: 18px; line-height: 1.5;">
+For more information, contact <a href="#">01111111</a>.  </p> -->
+<!-- </div> -->
 <div class="container">
     <div class="title">📅 Judge Booking Calendar</div>
+    <div class="intro">
+        Welcome! Use this calendar to select available dates for judge bookings. You can choose multiple dates within the allowed range, and then submit your booking with your details. The system will ensure you do not exceed the maximum allowed selections.
+    </div>
     <div id="calendar"></div>
     <button class="submitBtn" id="submitBooking">Submit Booking</button>
 </div>
 
-<script>
+
+<footer style="text-align:center; padding:20px; color:#555; font-size:14px;">
+  &copy; 2026 All rights reserved.
+</footer><script>
 document.addEventListener('DOMContentLoaded', function(){
 
     let selectedDates = [];
@@ -94,42 +141,28 @@ document.addEventListener('DOMContentLoaded', function(){
 
     var calendar = new FullCalendar.Calendar(document.getElementById('calendar'),{
         initialView:'dayGridMonth',
-        headerToolbar:{
-            left:'prev,next today',
-            center:'title',
-            right:'dayGridMonth'
-        },
+        headerToolbar:{ left:'prev,next today', center:'title', right:'dayGridMonth' },
         selectable: true,
         validRange: { start: minDate, end: maxDate },
         dateClick:function(info){
             const clickedDate = info.dateStr;
 
-            // Check allowed range
             if(clickedDate < minDate || clickedDate > maxDate){
                 Swal.fire({ icon:'warning', title:'Invalid Date', text:`Select between ${minDate} and ${maxDate}` });
                 return;
             }
 
-            // Check max booking
             if(!selectedDates.includes(clickedDate) && selectedDates.length >= maxBooking){
                 Swal.fire({ icon:'warning', title:'Limit Reached', text:`You can select up to ${maxBooking} dates only.` });
                 return;
             }
 
             if(selectedDates.includes(clickedDate)){
-                // Remove date
                 selectedDates = selectedDates.filter(d => d !== clickedDate);
-                calendar.getEvents().forEach(event => {
-                    if(event.startStr === clickedDate) event.remove();
-                });
+                calendar.getEvents().forEach(event => { if(event.startStr === clickedDate) event.remove(); });
             } else {
                 selectedDates.push(clickedDate);
-                calendar.addEvent({
-                    title: 'Selected',
-                    start: clickedDate,
-                    allDay: true,
-                    color: '#007BFF'
-                });
+                calendar.addEvent({ title: 'Selected', start: clickedDate, allDay: true, color: '#007BFF' });
             }
 
             document.getElementById("submitBooking").style.display =
@@ -153,11 +186,7 @@ document.addEventListener('DOMContentLoaded', function(){
                 const name = document.getElementById('name').value;
                 const email = document.getElementById('email').value;
                 const judge = document.getElementById('judgeNumber').value;
-
-                if(!name || !email || !judge){
-                    Swal.showValidationMessage("Please fill all fields");
-                }
-
+                if(!name || !email || !judge){ Swal.showValidationMessage("Please fill all fields"); }
                 return {name, email, judge};
             }
         }).then((result)=>{
@@ -178,9 +207,7 @@ document.addEventListener('DOMContentLoaded', function(){
                         selectedDates = [];
                         calendar.getEvents().forEach(e => e.remove());
                         document.getElementById("submitBooking").style.display="none";
-                    } else {
-                        Swal.fire("Error","Booking failed","error");
-                    }
+                    } else { Swal.fire("Error","Booking failed","error"); }
                 })
                 .catch(()=>Swal.fire("Error","Booking failed","error"));
             }
