@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Judge Booking Calendar</title>
+
+<!-- FullCalendar CSS & JS -->
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.20/index.global.min.js"></script>
+
+<!-- SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<style>
+/* Reset */
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    background: #f0f2f5;
+    padding: 30px;
+}
+
+.container {
+    max-width: 950px;
+    margin: auto;
+    background: #fff;
+    padding: 30px 25px;
+    border-radius: 12px;
+    box-shadow: 0 12px 25px rgba(0,0,0,0.12);
+    transition: all 0.3s ease-in-out;
+}
+
+.container:hover { transform: translateY(-2px); }
+
+.title {
+    font-size: 28px;
+    font-weight: 700;
+    text-align: center;
+    color: #333;
+    margin-bottom: 25px;
+}
+
+#calendar { margin-top: 10px; }
+
+.submitBtn {
+    margin-top: 25px;
+    width: 100%;
+    padding: 14px;
+    font-size: 18px;
+    background: #007BFF;
+    border: none;
+    color: #fff;
+    border-radius: 8px;
+    cursor: pointer;
+    display: none;
+    transition: 0.3s;
+}
+
+.submitBtn:hover { background: #0056b3; }
+
+.fc-toolbar-title { font-size: 20px !important; font-weight: 600; }
+
+.fc .fc-daygrid-event {
+    border-radius: 6px;
+    font-weight: 500;
+    text-align: center;
+}
+
+/* Mobile */
+@media(max-width:600px){
+    .title { font-size: 22px; }
+    .fc-toolbar-title { font-size: 16px !important; }
+    .submitBtn { font-size: 16px; padding: 12px; }
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+    <div class="title">📅 Judge Booking Calendar</div>
+    <div id="calendar"></div>
+    <button class="submitBtn" id="submitBooking">Submit Booking</button>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+
+    let selectedDates = [];
+    const maxBooking = 20; // max allowed dates per user
+    const minDate = '2026-03-10'; // start of allowed range
+    const maxDate = '2026-03-20'; // end of allowed range
+
+    var calendar = new FullCalendar.Calendar(document.getElementById('calendar'),{
+        initialView:'dayGridMonth',
+        headerToolbar:{
+            left:'prev,next today',
+            center:'title',
+            right:'dayGridMonth'
+        },
+        selectable: true,
+        validRange: { start: minDate, end: maxDate },
+        dateClick:function(info){
+            const clickedDate = info.dateStr;
+
+            // Check allowed range
+            if(clickedDate < minDate || clickedDate > maxDate){
+                Swal.fire({ icon:'warning', title:'Invalid Date', text:`Select between ${minDate} and ${maxDate}` });
+                return;
+            }
+
+            // Check max booking
+            if(!selectedDates.includes(clickedDate) && selectedDates.length >= maxBooking){
+                Swal.fire({ icon:'warning', title:'Limit Reached', text:`You can select up to ${maxBooking} dates only.` });
+                return;
+            }
+
+            if(selectedDates.includes(clickedDate)){
+                // Remove date
+                selectedDates = selectedDates.filter(d => d !== clickedDate);
+                calendar.getEvents().forEach(event => {
+                    if(event.startStr === clickedDate) event.remove();
+                });
+            } else {
+                selectedDates.push(clickedDate);
+                calendar.addEvent({
+                    title: 'Selected',
+                    start: clickedDate,
+                    allDay: true,
+                    color: '#007BFF'
+                });
+            }
+
+            document.getElementById("submitBooking").style.display =
+                selectedDates.length > 0 ? "block" : "none";
+        }
+    });
+
+    calendar.render();
+
+    document.getElementById("submitBooking").addEventListener("click", function(){
+        Swal.fire({
+            title:'Booking Details',
+            html:`
+                <input type="text" id="name" class="swal2-input" placeholder="Your Name">
+                <input type="email" id="email" class="swal2-input" placeholder="Email">
+                <input type="text" id="judgeNumber" class="swal2-input" placeholder="Judge Number">
+            `,
+            confirmButtonText:'Book',
+            showCancelButton:true,
+            preConfirm:()=>{
+                const name = document.getElementById('name').value;
+                const email = document.getElementById('email').value;
+                const judge = document.getElementById('judgeNumber').value;
+
+                if(!name || !email || !judge){
+                    Swal.showValidationMessage("Please fill all fields");
+                }
+
+                return {name, email, judge};
+            }
+        }).then((result)=>{
+            if(result.isConfirmed){
+                fetch('https://npsjudge.app.n8n.cloud/webhook/4419b438-077f-4e8f-8458-2decd3c8793d',{
+                    method:'POST',
+                    headers:{ 'Content-Type':'application/json' },
+                    body: JSON.stringify({
+                        name: result.value.name,
+                        email: result.value.email,
+                        judge_number: result.value.judge,
+                        dates: selectedDates
+                    })
+                })
+                .then(res => {
+                    if(res.ok){
+                        Swal.fire("Success","Booking confirmed","success");
+                        selectedDates = [];
+                        calendar.getEvents().forEach(e => e.remove());
+                        document.getElementById("submitBooking").style.display="none";
+                    } else {
+                        Swal.fire("Error","Booking failed","error");
+                    }
+                })
+                .catch(()=>Swal.fire("Error","Booking failed","error"));
+            }
+        });
+    });
+
+});
+</script>
+</body>
+</html>
