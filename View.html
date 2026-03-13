@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Judge Booking Calendar (Google Sheet)</title>
+
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.20/index.global.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<style>
+body{ font-family: Arial; background:#f5f7fb; padding:40px; display:flex; justify-content:center;}
+.container{ width: 900px; background:white; padding:30px; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,0.08);}
+.title{ font-size:28px; font-weight:700; text-align:center; margin-bottom:15px; }
+#bookingCount{ font-size:16px; text-align:right; margin-bottom:10px; color:#555;}
+#calendarWrapper {
+  width: 100%;
+  overflow-x: auto;
+  padding-bottom: 10px;
+}
+#calendar { min-width: 500px; }
+button{ display:block; margin:auto; padding:10px 20px; font-size:16px; border:none; border-radius:6px; background:#4CAF50; color:white; cursor:pointer; margin-bottom:15px;}
+button:hover{ background:#45a049; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="title">📅 Judge Booking Calendar (Google Sheet)</div>
+  <div id="bookingCount">0 / 200 judges booked</div>
+  <button id="loadSheet">Load Judges from Google Sheet</button>
+  <div id="calendarWrapper">
+    <div id="calendar"></div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const calendarEl = document.getElementById('calendar');
+  const bookingCountEl = document.getElementById('bookingCount');
+  const MAX_JUDGES = 200;
+
+  const calendar = new FullCalendar.Calendar(calendarEl, {
+    initialView: 'dayGridMonth',
+    headerToolbar:{
+      left:'prev,next today',
+      center:'title',
+      right:'dayGridMonth,timeGridWeek'
+    },
+    events: [],
+    eventClick: function(info){
+      const judge = info.event.extendedProps;
+      Swal.fire({
+        title: `Judge: ${info.event.title}`,
+        html: `
+          <b>Judge ID:</b> ${judge.judgeNumber}<br>
+          <b>Email:</b> ${judge.email}<br>
+          <b>Booked Dates:</b> ${judge.allDates}
+        `,
+        icon: 'info',
+        confirmButtonText: 'Close'
+      });
+    }
+  });
+
+  calendar.render();
+
+  function updateBookingCount(){
+    const events = calendar.getEvents();
+    const uniqueJudgeIDs = new Set(events.map(ev => ev.extendedProps.judgeNumber));
+    bookingCountEl.textContent = `${uniqueJudgeIDs.size} / ${MAX_JUDGES} judges booked`;
+  }
+
+  // Google Sheet Config
+  const SHEET_ID = "13jh3NJQ2uQ6Br6MyVcaf9zv6Bf3YmYjedOq8l1LfuRs"; // Replace with your Google Sheet ID
+  const API_KEY = "AIzaSyDrithfbnZYB1WCN7iNGhILGXBukXJv-Ps";   // Replace with your Google API key
+  const RANGE = "Sheet1!A:D";       // Columns: Name, Email, Date, Judges Number
+
+  async function fetchSheetData(){
+    try {
+      const url = `https://sheets.googleapis.com/v4/spreadsheets/13jh3NJQ2uQ6Br6MyVcaf9zv6Bf3YmYjedOq8l1LfuRs/values/Sheet1!A:D?key=AIzaSyDrithfbnZYB1WCN7iNGhILGXBukXJv-Ps`;
+      const res = await fetch(url);
+      const data = await res.json();
+      if(!data.values || data.values.length < 2){
+        alert("No data found in Google Sheet.");
+        return [];
+      }
+      const headers = data.values[0];
+      const rows = data.values.slice(1);
+      return rows.map(r => {
+        let obj = {};
+        headers.forEach((h,i)=>obj[h]=r[i]);
+        return obj;
+      });
+    } catch(err){
+      console.error(err);
+      alert("Error fetching Google Sheet data.");
+      return [];
+    }
+  }
+
+  document.getElementById('loadSheet').addEventListener('click', async function(){
+    const sheetData = await fetchSheetData();
+    if(sheetData.length===0) return;
+
+    const events = [];
+
+    sheetData.forEach(row => {
+      if(!row.Name || !row.Date || !row['Judges Number']) return;
+
+      let datesArray;
+      try{
+        datesArray = JSON.parse(row.Date);
+      } catch(err){
+        console.warn('Invalid date array for', row.Name);
+        return;
+      }
+
+      datesArray.forEach(date=>{
+        events.push({
+          title: row.Name,
+          start: date,
+          allDay: true,
+          color: "#ff9800",
+          extendedProps: {
+            email: row.Email,
+            judgeNumber: row['Judges Number'],
+            allDates: datesArray.join(', ')
+          }
+        });
+      });
+    });
+
+    // Check max unique judges
+    const existingJudgeIDs = new Set(calendar.getEvents().map(ev => ev.extendedProps.judgeNumber));
+    const newJudgeIDs = new Set(events.map(ev => ev.extendedProps.judgeNumber));
+    const totalUnique = new Set([...existingJudgeIDs, ...newJudgeIDs]);
+
+    if(totalUnique.size > MAX_JUDGES){
+      alert(`Cannot add events. Max judges (${MAX_JUDGES}) exceeded.`);
+      return;
+    }
+
+    calendar.addEventSource(events);
+    updateBookingCount();
+    Swal.fire("✅ Events loaded from Google Sheet!");
+  });
+
+});
+</script>
+
+</body>
+</html>
