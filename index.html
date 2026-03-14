@@ -96,7 +96,7 @@ nav img {
     transition: 0.3s;
 }
 
-.submitBtn:hover { background: #0056b3; }
+.submitBtn:hover { background: #6b2323; }
 
 /* FullCalendar customizations */
 .fc-toolbar-title { font-size: 20px !important; font-weight: 600; }
@@ -144,6 +144,12 @@ nav img {
 .bookingDetails p {
     margin: 5px 0 10px 0;
 }   
+
+.fc-daygrid-event {
+    font-size: 10px;
+    padding: 1px 3px;
+}
+
 /* Mobile */
 @media(max-width:600px){
     .title { font-size: 22px; }
@@ -181,10 +187,10 @@ For more information, contact <a href="#">01111111</a>.  </p> -->
 
 <div class="mainContainer">
   <div class="container">
-    <div class="title">Judge Booking Calendar</div>
+    <div class="title">National Productivity Awards 2025/26</div>
+    <div class="title">Available Dates to Participate in Desktop Evaluation</div>
     <div class="intro">
-      Welcome! Use this calendar to select available dates for judge bookings. You can choose multiple dates within the allowed range, and then submit your booking with your details. The system will ensure you do not exceed the maximum allowed selections.
-    </div>
+Welcome! Use this calendar to select your available dates to participate in the Desktop Evaluation. You can select as many dates as you want, and then submit your reservation with your details. Our system will analyze the dates you provided and notify you to participate.    </div>
     <div id="calendar"></div>
     <button class="submitBtn" id="submitBooking">Submit Booking</button>
   </div>
@@ -197,7 +203,7 @@ For more information, contact <a href="#">01111111</a>.  </p> -->
     <label for="email">Email:</label>
     <p id="emailDisplay"></p>
 
-    <label for="judgeMemberId">Judge Member Id:</label>
+    <label for="judgeMemberId">NIC Number:</label>
     <p id="judgeMemberIdDisplay" ></p>
 
     <label for="selectedDates" style="">Selected Dates:</label>
@@ -228,7 +234,7 @@ let selectedDates = [];
 /* SETTINGS */
 const maxBooking = 30;
 const minDate = '2026-03-23';
-const maxDate = '2026-03-04';
+const maxDate = '2026-04-10';
 
 /* WEEKLY DISABLE */
 const disableWeekDays = [0,6]; 
@@ -242,7 +248,7 @@ const disableWeekDays = [0,6];
 
 /* SPECIFIC DISABLED DATES */
 const disabledDates = [
-'2026-03-11',
+
 
 ];
 
@@ -360,9 +366,13 @@ if (currentDate >= min && currentDate <= max) {
         info.el.appendChild(caption);    }
 }
 
-    
+      const dates = info.date.toISOString().split('T')[0];
 
-    if(disabledDates.includes(date)){
+  if (dates < minDate || dates > maxDate) {
+    info.el.style.visibility = "hidden";
+  }
+
+    if(disabledDates.includes(dates)){
         
         
         info.el.style.backgroundColor = "#ffdddd"; // red
@@ -396,9 +406,9 @@ document.getElementById("submitBooking").addEventListener("click", function(){
 Swal.fire({
 title:'Booking Details',
 html:`
-<input type="text" id="name" class="swal2-input" placeholder="Your Name" value="${localStorage.getItem('name') ? localStorage.getItem('name') : ''}" required>
-<input type="email" id="email" class="swal2-input" placeholder="Email" value="${localStorage.getItem('email') ? localStorage.getItem('email') : ''}" required>
-<input type="text" id="judgeNumber" class="swal2-input" placeholder="Judge Member Id" value="${localStorage.getItem('judgeMemberId') ? localStorage.getItem('judgeMemberId') : ''}" required>
+<input type="text" id="name" class="swal2-input" placeholder="Enter Your Name" value="${localStorage.getItem('name') ? localStorage.getItem('name') : ''}" required>
+<input type="email" id="email" class="swal2-input" placeholder="Enter Your Email" value="${localStorage.getItem('email') ? localStorage.getItem('email') : ''}" required>
+<input type="text" id="judgeNumber" class="swal2-input" placeholder="Enter Your NIC Number" value="${localStorage.getItem('judgeMemberId') ? localStorage.getItem('judgeMemberId') : ''}" required>
 `,
 confirmButtonText:'Book',
 showCancelButton:true,
@@ -414,6 +424,10 @@ const judge=document.getElementById('judgeNumber').value;
   const ampm = d.getHours() >= 12 ? 'PM' : 'AM'; 
   let CurrentTime = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${hours12}-${minutes} ${ampm}` 
 
+if (judge.length !== 12 && !/^\d{8}[vVxX]$/.test(judge)) {
+  Swal.showValidationMessage("Please enter a valid NIC Number");
+}
+
 if(!name || !email || !judge){
 Swal.showValidationMessage("Please fill all fields");
 }
@@ -426,7 +440,7 @@ return {name,email,judge,CurrentTime};
 
 if(result.isConfirmed){
 
-fetch('https://npsjudge.app.n8n.cloud/webhook/8bec9b74-f561-4c4c-89ba-d18d04e4ba67',{
+fetch('https://npsjudge.app.n8n.cloud/webhook/4419b438-077f-4e8f-8458-2decd3c8793d',{
 
 method:'POST',
 
