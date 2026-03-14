@@ -12,32 +12,54 @@ body{ font-family: Arial; background:#f5f7fb; padding:40px; display:flex; justif
 .container{ width: 900px; background:white; padding:30px; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,0.08);}
 .title{ font-size:28px; font-weight:700; text-align:center; margin-bottom:15px; }
 #bookingCount{ font-size:16px; text-align:right; margin-bottom:10px; color:#555;}
-#calendarWrapper {
-  width: 100%;
-  overflow-x: auto;
-  padding-bottom: 10px;
-}
+#calendarWrapper { width: 100%; overflow-x: auto; padding-bottom: 10px; }
 #calendar { min-width: 500px; }
-button{ display:block; margin:auto; padding:10px 20px; font-size:16px; border:none; border-radius:6px; background:#4CAF50; color:white; cursor:pointer; margin-bottom:15px;}
-button:hover{ background:#45a049; }
+button{ display:block; margin:auto; padding:10px 20px; font-size:16px; border:none; border-radius:6px; background:#932F2F; color:white; cursor:pointer; margin-bottom:15px;}
+button:hover{ background:#932F2F; }
+
+#filters { display:flex; justify-content:space-between; margin-bottom:15px; gap:10px; }
+#filters input, #filters select { flex:1; padding:8px; border-radius:6px; border:1px solid #ccc; font-size:14px; }
 </style>
 </head>
 <body>
 
 <div class="container">
-  <div class="title">📅 Judge Booking Calendar (Google Sheet)</div>
+  <div class="title" style="color: #932F2F;">Judge Booking Calendar</div>
   <div id="bookingCount">0 / 200 judges booked</div>
-  <button id="loadSheet">Load Judges from Google Sheet</button>
+
+  <div id="filters">
+    <input type="text" id="searchName" placeholder="Search by Judge Name or NIC Number">
+    <select id="filterSheet">
+      <option value="" disabled selected>Filter by Sector</option>
+      <option value="">All Sectors</option>
+      <option value="Public Sector">Public Sector</option>
+      <option value="Manufacturing Sector">Manufacturing Sector</option>
+      <option value="School Sector">School Sector</option>
+      <!-- Add more options dynamically if needed -->
+    </select>
+  </div>
+
+  <button id="loadSheet" style="display: none;">Load Data</button>
   <div id="calendarWrapper">
     <div id="calendar"></div>
   </div>
+<footer>
+  <p style="text-align:center; font-size:14px; color:#666; bottom:0;">Developed by <a href="https://vexora.lk">Vexora IT Solutions</a></p>
+</footer>
+</div>
+
+<div id="legend" style="margin-top:20px; text-align:center; font-size:14px; color:#666;">
+  <span style="display:inline-block; width:15px; height:15px; background:#ff9800; margin-right:5px; border-radius:3px;"></span> Public Sector
+  <span style="display:inline-block; width:15px; height:15px; background:#2196f3; margin-right:5px; margin-left:10px; border-radius:3px;"></span> Manufacturing Sector
+  <span style="display:inline-block; width:15px; height:15px; background:#9c27b0; margin-right:5px; margin-left:10px; border-radius:3px;"></span> School Sector
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
   const calendarEl = document.getElementById('calendar');
   const bookingCountEl = document.getElementById('bookingCount');
   const MAX_JUDGES = 200;
+  let allEvents = [];
 
   const calendar = new FullCalendar.Calendar(calendarEl, {
     initialView: 'dayGridMonth',
@@ -51,11 +73,13 @@ document.addEventListener('DOMContentLoaded', function() {
       const judge = info.event.extendedProps;
       Swal.fire({
         title: `Judge: ${info.event.title}`,
-        html: `
-          <b>Judge ID:</b> ${judge.judgeNumber}<br>
-          <b>Email:</b> ${judge.email}<br>
-          <b>Booked Dates:</b> ${judge.allDates}
-        `,
+        html: `<table style="width:100%">
+          <tr><td><b>NIC Number:</b></td><td>${judge.judgeNumber}</td></tr>
+          <tr><td><b>Email:</b></td><td>${judge.email}</td></tr>
+          <tr><td><b>Sector:</b></td><td>${judge.sheetName || 'N/A'} </td></tr>
+          <tr><td><b>Booked Dates:</b></td><td>${judge.allDates}</td></tr>
+          <tr><td><b>Submitted Time:</b></td><td>${judge.time}</td></tr>
+        </table>`,
         icon: 'info',
         confirmButtonText: 'Close'
       });
@@ -70,81 +94,86 @@ document.addEventListener('DOMContentLoaded', function() {
     bookingCountEl.textContent = `${uniqueJudgeIDs.size} / ${MAX_JUDGES} judges booked`;
   }
 
-  // Google Sheet Config
-  const SHEET_ID = "13jh3NJQ2uQ6Br6MyVcaf9zv6Bf3YmYjedOq8l1LfuRs"; // Replace with your Google Sheet ID
-  const API_KEY = "AIzaSyDrithfbnZYB1WCN7iNGhILGXBukXJv-Ps";   // Replace with your Google API key
-  const RANGE = "Sheet1!A:D";       // Columns: Name, Email, Date, Judges Number
+  function renderFilteredEvents(nameFilter = '', sheetFilter = ''){
+    calendar.getEventSources().forEach(src => src.remove());
+    let filtered = allEvents.filter(ev=>{
+      return (!nameFilter || ev.title.toLowerCase().includes(nameFilter.toLowerCase()) || ev.extendedProps.judgeNumber.toLowerCase().includes(nameFilter.toLowerCase())) &&
+             (!sheetFilter || ev.extendedProps.sheetName === sheetFilter );
+    });
+    calendar.addEventSource(filtered);
+    updateBookingCount();
+  }
 
-  async function fetchSheetData(){
+  // Google Sheet Config
+  const SHEET_ID = "13jh3NJQ2uQ6Br6MyVcaf9zv6Bf3YmYjedOq8l1LfuRs";
+  const API_KEY = "AIzaSyDrithfbnZYB1WCN7iNGhILGXBukXJv-Ps";
+  
+  const allSheetNames = ["Public Sector","Manufacturing Sector","School Sector"]; // list all sheet names here
+
+  async function fetchSheetData(sheetName=""){
     try {
-      const url = `https://sheets.googleapis.com/v4/spreadsheets/13jh3NJQ2uQ6Br6MyVcaf9zv6Bf3YmYjedOq8l1LfuRs/values/Sheet1!A:D?key=AIzaSyDrithfbnZYB1WCN7iNGhILGXBukXJv-Ps`;
+      const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${sheetName}?key=${API_KEY}`;
       const res = await fetch(url);
       const data = await res.json();
-      if(!data.values || data.values.length < 2){
-        alert("No data found in Google Sheet.");
-        return [];
-      }
+      if(!data.values || data.values.length < 2) return [];
       const headers = data.values[0];
       const rows = data.values.slice(1);
       return rows.map(r => {
         let obj = {};
         headers.forEach((h,i)=>obj[h]=r[i]);
+        obj.sheetName = sheetName;
         return obj;
       });
     } catch(err){
       console.error(err);
-      alert("Error fetching Google Sheet data.");
       return [];
     }
   }
 
-  document.getElementById('loadSheet').addEventListener('click', async function(){
-    const sheetData = await fetchSheetData();
-    if(sheetData.length===0) return;
+  // Auto-load all sheets
+  for(const sheet of allSheetNames){
+    const sheetData = await fetchSheetData(sheet);
+    if(sheetData.length===0) continue;
 
     const events = [];
-
     sheetData.forEach(row => {
-      if(!row.Name || !row.Date || !row['Judges Number']) return;
-
+      if(!row.Name || !row.Date || !row['Judges Id'] ) return;
       let datesArray;
-      try{
-        datesArray = JSON.parse(row.Date);
-      } catch(err){
-        console.warn('Invalid date array for', row.Name);
-        return;
-      }
+      try{ datesArray = JSON.parse(row.Date); if (!Array.isArray(datesArray)) datesArray = [datesArray]; }
+      catch{ datesArray = [row.Date]; }
 
       datesArray.forEach(date=>{
         events.push({
           title: row.Name,
           start: date,
           allDay: true,
-          color: "#ff9800",
+          color:  row.sheetName === "Public Sector" ? "#ff9800" : 
+           row.sheetName === "Manufacturing Sector" ? "#2196f3" : 
+           "#9c27b0",
           extendedProps: {
             email: row.Email,
-            judgeNumber: row['Judges Number'],
-            allDates: datesArray.join(', ')
+            judgeNumber: row['Judges Id'],
+            time: row['Time Stamp'],
+            sector: row.Sector,
+            allDates: datesArray.join(", "),
+            sheetName: row.sheetName
           }
         });
       });
     });
+    allEvents = [...allEvents, ...events];
+  }
 
-    // Check max unique judges
-    const existingJudgeIDs = new Set(calendar.getEvents().map(ev => ev.extendedProps.judgeNumber));
-    const newJudgeIDs = new Set(events.map(ev => ev.extendedProps.judgeNumber));
-    const totalUnique = new Set([...existingJudgeIDs, ...newJudgeIDs]);
+  renderFilteredEvents();
+  updateBookingCount();
 
-    if(totalUnique.size > MAX_JUDGES){
-      alert(`Cannot add events. Max judges (${MAX_JUDGES}) exceeded.`);
-      return;
-    }
-
-    calendar.addEventSource(events);
-    updateBookingCount();
-    Swal.fire("✅ Events loaded from Google Sheet!");
+  // Keep filters functional
+  document.getElementById('searchName').addEventListener('input', function(){
+    renderFilteredEvents(this.value, document.getElementById('filterSheet').value);
   });
-
+  document.getElementById('filterSheet').addEventListener('change', function(){
+    renderFilteredEvents(document.getElementById('searchName').value, this.value);
+  });
 });
 </script>
 
