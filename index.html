@@ -238,7 +238,7 @@ document.addEventListener('DOMContentLoaded', function(){
     document.getElementById('sector').innerText = sector.toLocaleUpperCase().charAt(0) + sector.slice(1) + " Sector";
   }
 
-  const Webhook = 'https://npsjudge.app.n8n.cloud/webhook/8bec9b74-f561-4c4c-89ba-d18d04e4ba67';
+  const Webhook = 'https://npsjudge.app.n8n.cloud/webhook/4419b438-077f-4e8f-8458-2decd3c8793d';
   // const Webhook = 'https://npsjudge.app.n8n.cloud/webhook-test/8bec9b74-f561-4c4c-89ba-d18d04e4ba67'
   
 function showBookingDetails() {
@@ -260,7 +260,7 @@ let selectedDates = [];
 
 /* SETTINGS */
 const maxBooking = 30;
-const minDate = '2026-03-22';
+const minDate = '2026-03-23';
 const maxDate = '2026-04-10';
 
 /* WEEKLY DISABLE */
@@ -275,8 +275,10 @@ const disableWeekDays = [0,6];
 
 /* SPECIFIC DISABLED DATES */
 const disabledDates = [
-'2026-04-01',
-'2026-04-03'    
+  '2026-04-01',
+  '2026-04-03',
+  
+
 
 ];
 
@@ -394,34 +396,9 @@ if (currentDate >= min && currentDate <= max) {
         info.el.appendChild(caption);    }
 }
 
-      const dates = info.date.toISOString().split('T')[0];
+ 
 
-  if (dates < minDate || dates > maxDate) {
-    info.el.style.visibility = "hidden";
-  }
 
-    if(disabledDates.includes(dates)){
-        
-        
-        info.el.style.backgroundColor = "#ffdddd"; // red
-        info.el.style.color = "#a00";
-        info.el.style.pointerEvents = "none";
-        info.el.style.cursor = "not-allowed";
-      
-        // Make sure caption does not interfere with the date number
-        let caption = document.createElement("p");
-        caption.innerText = "Unavailable";
-        caption.style.backgroundColor = "#ffdddd";
-        caption.style.position = "relative";
-        caption.style.fontSize = "10px";
-        caption.style.color = "red";
-        caption.style.textAlign = "center";
-        caption.style.marginTop = "-11px"; 
-        caption.style.display = "block";
-
-        // Append caption at the end of the cell so the date remains on top
-        info.el.appendChild(caption);
-    }
 }
 });
 
