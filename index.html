@@ -445,13 +445,26 @@ preConfirm:()=>{
 const name=document.getElementById('name').value;
 const email=document.getElementById('email').value;
 const judge=document.getElementById('judgeNumber').value;
+const judge_formated = judge.trim();
+
   const d = new Date(); 
   const hours12 = d.getHours() % 12 || 12; 
   const minutes = String(d.getMinutes()).padStart(2,'0'); 
   const ampm = d.getHours() >= 12 ? 'PM' : 'AM'; 
   let CurrentTime = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${hours12}-${minutes} ${ampm}` 
 
-if (judge.length !== 12 && !/^\d{8}[vVxX]$/.test(judge)) {
+
+  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  
+  if (emailRegex.test(email)) {
+  } else {
+    Swal.showValidationMessage("Please enter a valid email address");
+    return;
+  }
+
+
+// Old NIC: 9 digits + V/v/X/x (10 chars), New NIC: 12 digits
+if (!(/^([0-9]{9}[vVxX])$/.test(judge_formated) || /^[0-9]{12}$/.test(judge_formated))) {
   Swal.showValidationMessage("Please enter a valid NIC Number");
 }
 
