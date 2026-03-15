@@ -443,7 +443,7 @@ const judge_formated = judge.trim();
 
 
 // Old NIC: 9 digits + V/v/X/x (10 chars), New NIC: 12 digits
-if (!(/^([0-9]{9}[vVxX])$/.test(judge_formated) || /^[0-9]{12}$/.test(judge_formated))) {
+if (!(/^([0-9]{10}[vVxX])$/.test(judge_formated) || /^[0-9]{12}$/.test(judge_formated))) {
   Swal.showValidationMessage("Please enter a valid NIC Number");
 }
 
