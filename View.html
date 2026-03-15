@@ -19,10 +19,40 @@ button:hover{ background:#932F2F; }
 
 #filters { display:flex; justify-content:space-between; margin-bottom:15px; gap:10px; }
 #filters input, #filters select { flex:1; padding:8px; border-radius:6px; border:1px solid #ccc; font-size:14px; }
+
+.loading{
+cursor: wait;  
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+display:flex;
+align-items:center;
+justify-content:center;
+background:rgba(255,255,255,0.7);
+z-index:9999;
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 5px solid #f3f3f3;
+  border-top: 5px solid #932F2F;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
 </style>
 </head>
 <body>
-
+ <div class="loading" style="width: 100%; height: 100%;">
+      <div class="spinner" ></div>
+    </div>
 <div class="container">
   <div class="title" style="color: #932F2F;">Judge Booking Calendar <div id="legend" style="margin-top:20px; text-align:center; font-size:14px; color:#666;">
   <span style="display:inline-block; width:15px; height:15px; background:#ff9800; margin-right:5px; border-radius:3px;"></span> Public Sector
@@ -43,8 +73,11 @@ button:hover{ background:#932F2F; }
     </select>
   </div>
 
-  <div id="calendarWrapper">
-    <div id="calendar"></div>
+  <div id="calendarWrapper" >
+   
+    <div id="calendar" >
+
+    </div>
   </div>
 <footer>
   <p style="text-align:center; font-size:14px; color:#666; bottom:0;">Developed by <a href="https://vexora.lk">Vexora IT Solutions</a></p>
@@ -171,6 +204,11 @@ end: new Date(new Date(maxDate).setDate(new Date(maxDate).getDate() + 1))
 
   renderFilteredEvents();
   updateBookingCount();
+  document.querySelector(".loading").style.display = "none";
+  document.getElementById("calendar").style.display = "block";
+  // loader hide
+  document.querySelector(".loading").style.display = "none";
+  document.getElementById("calendar").style.display = "block";
 
   // Keep filters functional
   document.getElementById('searchName').addEventListener('input', function(){
