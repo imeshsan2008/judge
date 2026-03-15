@@ -1,224 +1,548 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<title>Judge Booking Calendar (Google Sheet)</title>
+  <meta charset="UTF-8">
+  <title>Judge Booking Calendar (Google Sheet)</title>
 
-<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.20/index.global.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.20/index.global.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-<style>
-body{ font-family: Arial; background:#f5f7fb; padding:40px; display:flex; justify-content:center;}
-.container{ width: 900px; background:white; padding:30px; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,0.08);}
-.title{ font-size:28px; font-weight:700; text-align:center; margin-bottom:15px; }
-#bookingCount{ font-size:16px; text-align:right; margin-bottom:10px; color:#555;}
-#calendarWrapper { width: 100%; overflow-x: auto; padding-bottom: 10px; }
-#calendar { min-width: 500px; }
-button{ display:block; margin:auto; padding:10px 20px; font-size:16px; border:none; border-radius:6px; background:#932F2F; color:white; cursor:pointer; margin-bottom:15px;}
-button:hover{ background:#932F2F; }
+  <style>
+    body {
+      font-family: Arial;
+      background: #f5f7fb;
+      padding: 40px;
+      display: flex;
+      justify-content: center;
+    }
 
-#filters { display:flex; justify-content:space-between; margin-bottom:15px; gap:10px; }
-#filters input, #filters select { flex:1; padding:8px; border-radius:6px; border:1px solid #ccc; font-size:14px; }
+    .container {
+      width: 900px;
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    }
 
-.loading{
-cursor: wait;  
-position:fixed;
-top:0;
-left:0;
-width:100%;
-height:100%;
+    .title {
+      font-size: 28px;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 15px;
+    }
+
+    #bookingCount {
+      font-size: 16px;
+      text-align: right;
+      margin-bottom: 10px;
+      color: #555;
+    }
+
+    #calendarWrapper {
+      width: 100%;
+      overflow-x: auto;
+      padding-bottom: 10px;
+    }
+
+    #calendar {
+      min-width: 500px;
+    }
+
+    button {
+      display: block;
+      margin: auto;
+      padding: 10px 20px;
+      font-size: 16px;
+      border: none;
+      border-radius: 6px;
+      background: #932F2F;
+      color: white;
+      cursor: pointer;
+      margin-bottom: 15px;
+    }
+
+    button:hover {
+      background: #932F2F;
+    }
+
+    #filters {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 15px;
+      gap: 10px;
+    }
+
+    #filters input,
+    #filters select {
+      flex: 1;
+      padding: 8px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+    }
+
+    .loading {
+      cursor: wait;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.7);
+      z-index: 9999;
+    }
+
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 5px solid #f3f3f3;
+      border-top: 5px solid #932F2F;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+    .mini-card:hover{
+      transform: translateY(-5px);
+    }
+.dashboard-cards{
+display:flex;
+gap:15px;
+flex-wrap:wrap;
+margin-bottom:15px;
+}
+
+
+.mini-card{
+display:flex;
+align-items:center;
+gap:12px;
+background:#fff;
+padding:14px;
+border-radius:10px;
+box-shadow:0 4px 12px rgba(0,0,0,0.08);
+flex:1;
+min-width:180px;
+}
+
+.icon{
+width:45px;
+height:45px;
 display:flex;
 align-items:center;
 justify-content:center;
-background:rgba(255,255,255,0.7);
-z-index:9999;
+background:#eef2ff;
+border-radius:8px;
 }
 
-.spinner {
-  width: 50px;
-  height: 50px;
-  border: 5px solid #f3f3f3;
-  border-top: 5px solid #932F2F;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
+.text{
+flex:1;
+display:flex;
+flex-direction:column;
+gap:4px;
 }
 
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+.text span{
+font-weight:600;
+font-size:18px;
 }
-</style>
+
+.text small{
+font-size:12px;
+color:#777;
+}
+
+.progress{
+width:100%;
+height:6px;
+background:#eee;
+border-radius:10px;
+overflow:hidden;
+margin-top:4px;
+}
+
+.progress-bar{
+height:100%;
+width:0%;
+background:#4f46e5;
+transition:width .6s ease;
+}
+.fc-daygrid-event-harness:hover{
+  transform: scale(1.05);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+  </style>
 </head>
+
 <body>
- <div class="loading" style="width: 100%; height: 100%;">
-      <div class="spinner" ></div>
-    </div>
-<div class="container">
-  <div class="title" style="color: #932F2F;">Judge Booking Calendar <div id="legend" style="margin-top:20px; text-align:center; font-size:14px; color:#666;">
-  <span style="display:inline-block; width:15px; height:15px; background:#ff9800; margin-right:5px; border-radius:3px;"></span> Public Sector
-  <span style="display:inline-block; width:15px; height:15px; background:#2196f3; margin-right:5px; margin-left:10px; border-radius:3px;"></span> Manufacturing Sector
-  <span style="display:inline-block; width:15px; height:15px; background:#9c27b0; margin-right:5px; margin-left:10px; border-radius:3px;"></span> School Sector
-</div></div>
-  <div id="bookingCount">0 / 200 judges booked</div>
-
-  <div id="filters">
-    <input type="text" id="searchName" placeholder="Search by Judge Name or NIC Number">
-    <select id="filterSheet">
-      <option value="" disabled selected>Filter by Sector</option>
-      <option value="">All Sectors</option>
-      <option value="Public Sector">Public Sector</option>
-      <option value="Manufacturing Sector">Manufacturing Sector</option>
-      <option value="School Sector">School Sector</option>
-      <!-- Add more options dynamically if needed -->
-    </select>
+  <div class="loading" style="width: 100%; height: 100%;">
+    <div class="spinner"></div>
   </div>
-
-  <div id="calendarWrapper" >
-   
-    <div id="calendar" >
-
+  <div class="container">
+    <div class="title" style="color: #932F2F;">Judge Booking Calendar <div id="legend"
+        style="margin-top:20px; text-align:center; font-size:14px; color:#666;">
+        <span
+          style="display:inline-block; width:15px; height:15px; background:#ff9900; margin-right:5px; border-radius:3px;"></span>
+        Public Sector
+        <span
+          style="display:inline-block; width:15px; height:15px; background:#2196f3; margin-right:5px; margin-left:10px; border-radius:3px;"></span>
+        Manufacturing Sector
+        <span
+          style="display:inline-block; width:15px; height:15px; background:#9c27b0; margin-right:5px; margin-left:10px; border-radius:3px;"></span>
+        School Sector
+      </div>
     </div>
-  </div>
-<footer>
-  <p style="text-align:center; font-size:14px; color:#666; bottom:0;">Developed by <a href="https://vexora.lk">Vexora IT Solutions</a></p>
-</footer>
+<div class="dashboard-cards" >
+
+<div class="mini-card">
+<div class="icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" fill="#932f2f71"><!--!Font Awesome Free v7.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.--><path d="M320 80C377.4 80 424 126.6 424 184C424 241.4 377.4 288 320 288C262.6 288 216 241.4 216 184C216 126.6 262.6 80 320 80zM96 152C135.8 152 168 184.2 168 224C168 263.8 135.8 296 96 296C56.2 296 24 263.8 24 224C24 184.2 56.2 152 96 152zM0 480C0 409.3 57.3 352 128 352C140.8 352 153.2 353.9 164.9 357.4C132 394.2 112 442.8 112 496L112 512C112 523.4 114.4 534.2 118.7 544L32 544C14.3 544 0 529.7 0 512L0 480zM521.3 544C525.6 534.2 528 523.4 528 512L528 496C528 442.8 508 394.2 475.1 357.4C486.8 353.9 499.2 352 512 352C582.7 352 640 409.3 640 480L640 512C640 529.7 625.7 544 608 544L521.3 544zM472 224C472 184.2 504.2 152 544 152C583.8 152 616 184.2 616 224C616 263.8 583.8 296 544 296C504.2 296 472 263.8 472 224zM160 496C160 407.6 231.6 336 320 336C408.4 336 480 407.6 480 496L480 512C480 529.7 465.7 544 448 544L192 544C174.3 544 160 529.7 160 512L160 496z"/></svg></div>
+
+<div class="text">
+<span id="bookingCountText">0 / 200</span>
+<small>All Judges Booked</small>
+
+<div class="progress">
+<div id="progressAll" class="progress-bar"></div>
 </div>
 
+</div>
+</div>
+
+<div class="mini-card">
+<div class="icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" fill="#ff990071"><!--!Font Awesome Free v7.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.--><path d="M302.7 69.1C313.2 62.3 326.8 62.3 337.3 69.1L561.3 213.1C573.2 220.8 578.7 235.4 574.7 249C570.7 262.6 558.2 272 544 272L512 272L512 480L563.2 518.4C571.3 524.4 576 533.9 576 544C576 561.7 561.7 576 544 576L96 576C78.3 576 64 561.7 64 544C64 533.9 68.7 524.4 76.8 518.4L128 480L128 480L128 272L96 272C81.8 272 69.3 262.6 65.3 249C61.3 235.4 66.8 220.7 78.7 213.1L302.7 69.1zM400 272L400 480L464 480L464 272L400 272zM288 480L352 480L352 272L288 272L288 480zM176 272L176 480L240 480L240 272L176 272z"/></svg></div>
+
+<div class="text">
+<span id="publicSectorCount">0 / 200</span>
+<small>Public Sector Judges</small>
+
+<div class="progress">
+<div id="progressPublic" class="progress-bar"></div>
+</div>
+
+</div>
+</div>
+
+<div class="mini-card">
+<div class="icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" fill="#2195f360"> <!--!Font Awesome Free v7.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.--><path d="M96 96C78.3 96 64 110.3 64 128L64 496C64 522.5 85.5 544 112 544L528 544C554.5 544 576 522.5 576 496L576 216.2C576 198 556.6 186.5 540.6 195.1L384 279.4L384 216.2C384 198 364.6 186.5 348.6 195.1L192 279.4L192 128C192 110.3 177.7 96 160 96L96 96z"/></svg></div>
+
+<div class="text">
+<span id="manufacturingSectorCount">0 / 200</span>
+<small>Manufacturing Judges</small>
+
+<div class="progress">
+<div id="progressManufacturing" class="progress-bar"></div>
+</div>
+
+</div>
+</div>
+
+<div class="mini-card">
+<div class="icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" fill="#9b27b0a8"><!--!Font Awesome Free v7.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.--><path d="M480 576L192 576C139 576 96 533 96 480L96 160C96 107 139 64 192 64L496 64C522.5 64 544 85.5 544 112L544 400C544 420.9 530.6 438.7 512 445.3L512 512C529.7 512 544 526.3 544 544C544 561.7 529.7 576 512 576L480 576zM192 448C174.3 448 160 462.3 160 480C160 497.7 174.3 512 192 512L448 512L448 448L192 448zM224 216C224 229.3 234.7 240 248 240L424 240C437.3 240 448 229.3 448 216C448 202.7 437.3 192 424 192L248 192C234.7 192 224 202.7 224 216zM248 288C234.7 288 224 298.7 224 312C224 325.3 234.7 336 248 336L424 336C437.3 336 448 325.3 448 312C448 298.7 437.3 288 424 288L248 288z"/></svg></div>
+
+<div class="text">
+<span id="schoolSectorCount">0 / 200</span>
+<small>School Sector Judges</small>
+
+<div class="progress">
+<div id="progressSchool" class="progress-bar"></div>
+</div>
+
+</div>
+</div>
+
+</div>
+    <div id="filters">
+      <input type="text" id="searchName" placeholder="Search by Judge Name or NIC Number">
+      <select id="filterSheet">
+        <option value="" disabled selected>Filter by Sector</option>
+        <option value="">All Sectors</option>
+        <option value="Public Sector">Public Sector</option>
+        <option value="Manufacturing Sector">Manufacturing Sector</option>
+        <option value="School Sector">School Sector</option>
+        <!-- Add more options dynamically if needed -->
+      </select>
+    </div>
+
+    <div id="calendarWrapper">
+
+      <div id="calendar">
+
+      </div>
+    </div>
+    <footer>
+      <p style="text-align:center; font-size:14px; color:#666; bottom:0;">Developed by <a
+          href="https://vexora.lk">Vexora IT Solutions</a></p>
+    </footer>
+  </div>
 
 
-<script>
-document.addEventListener('DOMContentLoaded', async function() {
-  const calendarEl = document.getElementById('calendar');
-  const bookingCountEl = document.getElementById('bookingCount');
-  const MAX_JUDGES = 200;
-  let allEvents = [];
-const minDate = '2026-03-23';
-const maxDate = '2026-04-10';
-  const calendar = new FullCalendar.Calendar(calendarEl, {
-    initialView: 'dayGridMonth',
-    headerToolbar:{
-      left:'prev,next today',
-      center:'title',
-      right:'dayGridMonth,timeGridWeek'
-    },
-   validRange:{
-start:minDate,
-end: new Date(new Date(maxDate).setDate(new Date(maxDate).getDate() + 1))
 
-},
-    events: [],
-    eventClick: function(info){
-      const judge = info.event.extendedProps;
-      Swal.fire({
-        title: `Judge: ${info.event.title}`,
-        html: `<table style="width:100%">
+  <script>
+    document.addEventListener('DOMContentLoaded', async function () {
+function updateCard(current,total,textId,progressId){
+
+let percent=(current/total)*100
+
+document.getElementById(textId).innerText=current+" / "+total
+
+let bar=document.getElementById(progressId)
+
+bar.style.width=percent+"%"
+
+if(percent>=100){
+bar.style.background="#22c55e"
+}
+else if(percent>=80){
+bar.style.background="#f59e0b"
+}
+else{
+bar.style.background="#4f46e5"
+}
+
+}
+async function refreshSheetData(){
+
+// save scroll position
+let scrollPos = window.scrollY;
+
+allEvents = [];
+
+for (const sheet of allSheetNames) {
+
+const sheetData = await fetchSheetData(sheet);
+
+if (sheetData.length === 0) continue;
+
+sheetData.forEach(row => {
+
+if (!row.Name || !row.Date || !row['Judges Id']) return;
+
+let datesArray;
+
+try{
+datesArray = JSON.parse(row.Date);
+if(!Array.isArray(datesArray)) datesArray=[datesArray];
+}
+catch{
+datesArray=[row.Date];
+}
+
+datesArray.forEach(date=>{
+
+allEvents.push({
+title: row.Name,
+start: date,
+allDay:true,
+
+color: sheet==="Public Sector" ? "#ff9800"
+: sheet==="Manufacturing Sector" ? "#2196f3"
+: "#9c27b0",
+
+extendedProps:{
+email: row.Email,
+judgeNumber: row['Judges Id'],
+time: row['Time Stamp'],
+sector: row.Sector,
+allDates: datesArray.join(", "),
+sheetName: sheet
+}
+
+});
+
+});
+
+});
+
+}
+
+updateBookingCount();
+
+
+
+}
+      const calendarEl = document.getElementById('calendar');
+      const bookingCountEl = document.getElementById('bookingCountText');
+      
+      const publicSectorCountEl = document.getElementById('publicSectorCount');
+      const manufacturingSectorCountEl = document.getElementById('manufacturingSectorCount');
+      const schoolSectorCountEl = document.getElementById('schoolSectorCount');
+
+      const MAX_JUDGES = 200;
+      let allEvents = [];
+      const minDate = '2026-03-23';
+      const maxDate = '2026-04-10';
+      const calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        headerToolbar: {
+          left: 'prev,next today',
+          center: 'title',
+          right: 'dayGridMonth,timeGridWeek'
+        },
+        validRange: {
+          start: minDate,
+          end: new Date(new Date(maxDate).setDate(new Date(maxDate).getDate() + 1))
+
+        },
+        events: [],
+        eventClick: function (info) {
+          const judge = info.event.extendedProps;
+          Swal.fire({
+            title: `Judge: ${info.event.title}`,
+            html: `
+          <table style="width:100%">
           <tr><td><b>NIC Number:</b></td><td>${judge.judgeNumber}</td></tr>
           <tr><td><b>Email:</b></td><td>${judge.email}</td></tr>
           <tr><td><b>Sector:</b></td><td>${judge.sheetName || 'N/A'} </td></tr>
           <tr><td><b>Booked Dates:</b></td><td>${judge.allDates}</td></tr>
           <tr><td><b>Submitted Time:</b></td><td>${judge.time}</td></tr>
         </table>`,
-        icon: 'info',
-        confirmButtonText: 'Close'
+            icon: 'info',
+            confirmButtonText: 'Close'
+          });
+        }
       });
-    }
-  });
 
-  calendar.render();
+      calendar.render();
 
-  function updateBookingCount(){
-    const events = calendar.getEvents();
-    const uniqueJudgeIDs = new Set(events.map(ev => ev.extendedProps.judgeNumber));
-    bookingCountEl.textContent = `${uniqueJudgeIDs.size} / ${MAX_JUDGES} judges booked`;
-  }
+function updateBookingCount() {
 
-  function renderFilteredEvents(nameFilter = '', sheetFilter = ''){
-    calendar.getEventSources().forEach(src => src.remove());
-    let filtered = allEvents.filter(ev=>{
-      return (!nameFilter || ev.title.toLowerCase().includes(nameFilter.toLowerCase()) || ev.extendedProps.judgeNumber.toLowerCase().includes(nameFilter.toLowerCase())) &&
-             (!sheetFilter || ev.extendedProps.sheetName === sheetFilter );
-    });
-    calendar.addEventSource(filtered);
-    updateBookingCount();
-  }
+const events = calendar.getEvents();
 
-  // Google Sheet Config
-  const SHEET_ID = "13jh3NJQ2uQ6Br6MyVcaf9zv6Bf3YmYjedOq8l1LfuRs";
-  const API_KEY = "AIzaSyDrithfbnZYB1WCN7iNGhILGXBukXJv-Ps";
-  
-  const allSheetNames = ["Public Sector","Manufacturing Sector","School Sector"]; // list all sheet names here
+const uniqueAll = new Set();
+const uniquePublic = new Set();
+const uniqueManufacturing = new Set();
+const uniqueSchool = new Set();
 
-  async function fetchSheetData(sheetName=""){
-    try {
-      const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${sheetName}?key=${API_KEY}`;
-      const res = await fetch(url);
-      const data = await res.json();
-      if(!data.values || data.values.length < 2) return [];
-      const headers = data.values[0];
-      const rows = data.values.slice(1);
-      return rows.map(r => {
-        let obj = {};
-        headers.forEach((h,i)=>obj[h]=r[i]);
-        obj.sheetName = sheetName;
-        return obj;
-      });
-    } catch(err){
-      console.error(err);
-      return [];
-    }
-  }
+events.forEach(ev => {
 
-  // Auto-load all sheets
-  for(const sheet of allSheetNames){
-    const sheetData = await fetchSheetData(sheet);
-    if(sheetData.length===0) continue;
+let id = ev.extendedProps.judgeNumber;
+let sector = ev.extendedProps.sheetName;
 
-    const events = [];
-    sheetData.forEach(row => {
-      if(!row.Name || !row.Date || !row['Judges Id'] ) return;
-      let datesArray;
-      try{ datesArray = JSON.parse(row.Date); if (!Array.isArray(datesArray)) datesArray = [datesArray]; }
-      catch{ datesArray = [row.Date]; }
+uniqueAll.add(id);
 
-      datesArray.forEach(date=>{
-        events.push({
-          title: row.Name,
-          start: date,
-          allDay: true,
-          color:  row.sheetName === "Public Sector" ? "#ff9800" : 
-           row.sheetName === "Manufacturing Sector" ? "#2196f3" : 
-           "#9c27b0",
-          extendedProps: {
-            email: row.Email,
-            judgeNumber: row['Judges Id'],
-            time: row['Time Stamp'],
-            sector: row.Sector,
-            allDates: datesArray.join(", "),
-            sheetName: row.sheetName
-          }
-        });
-      });
-    });
-    allEvents = [...allEvents, ...events];
-  }
+if(sector === "Public Sector") uniquePublic.add(id);
+if(sector === "Manufacturing Sector") uniqueManufacturing.add(id);
+if(sector === "School Sector") uniqueSchool.add(id);
 
-  renderFilteredEvents();
-  updateBookingCount();
-  document.querySelector(".loading").style.display = "none";
-  document.getElementById("calendar").style.display = "block";
-  // loader hide
-  document.querySelector(".loading").style.display = "none";
-  document.getElementById("calendar").style.display = "block";
-
-  // Keep filters functional
-  document.getElementById('searchName').addEventListener('input', function(){
-    renderFilteredEvents(this.value, document.getElementById('filterSheet').value);
-  });
-  document.getElementById('filterSheet').addEventListener('change', function(){
-    renderFilteredEvents(document.getElementById('searchName').value, this.value);
-  });
 });
-</script>
+
+// All Judges
+updateCard(uniqueAll.size, MAX_JUDGES, 'bookingCountText', 'progressAll');
+
+// Public Sector
+updateCard(uniquePublic.size, MAX_JUDGES, 'publicSectorCount', 'progressPublic');
+
+// Manufacturing Sector
+updateCard(uniqueManufacturing.size, MAX_JUDGES, 'manufacturingSectorCount', 'progressManufacturing');
+
+// School Sector
+updateCard(uniqueSchool.size, MAX_JUDGES, 'schoolSectorCount', 'progressSchool');
+
+}
+
+      function renderFilteredEvents(nameFilter = '', sheetFilter = '') {
+        calendar.getEventSources().forEach(src => src.remove());
+        let filtered = allEvents.filter(ev => {
+          return (!nameFilter || ev.title.toLowerCase().includes(nameFilter.toLowerCase()) || ev.extendedProps.judgeNumber.toLowerCase().includes(nameFilter.toLowerCase())) &&
+            (!sheetFilter || ev.extendedProps.sheetName === sheetFilter);
+        });
+        calendar.addEventSource(filtered);
+      }
+
+      // Google Sheet Config
+      const SHEET_ID = "13jh3NJQ2uQ6Br6MyVcaf9zv6Bf3YmYjedOq8l1LfuRs";
+      const API_KEY = "AIzaSyDrithfbnZYB1WCN7iNGhILGXBukXJv-Ps";
+
+      const allSheetNames = ["Public Sector", "Manufacturing Sector", "School Sector"]; // list all sheet names here
+
+      async function fetchSheetData(sheetName = "") {
+        try {
+          const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${sheetName}?key=${API_KEY}`;
+          const res = await fetch(url);
+          const data = await res.json();
+          if (!data.values || data.values.length < 2) return [];
+          const headers = data.values[0];
+          const rows = data.values.slice(1);
+          return rows.map(r => {
+            let obj = {};
+            headers.forEach((h, i) => obj[h] = r[i]);
+            obj.sheetName = sheetName;
+            return obj;
+          });
+        } catch (err) {
+          console.error(err);
+          return [];
+        }
+      }
+
+      // Auto-load all sheets
+      for (const sheet of allSheetNames) {
+        const sheetData = await fetchSheetData(sheet);
+        if (sheetData.length === 0) continue;
+
+        const events = [];
+        sheetData.forEach(row => {
+          if (!row.Name || !row.Date || !row['Judges Id']) return;
+          let datesArray;
+          try { datesArray = JSON.parse(row.Date); if (!Array.isArray(datesArray)) datesArray = [datesArray]; }
+          catch { datesArray = [row.Date]; }
+
+          datesArray.forEach(date => {
+            events.push({
+              title: row.Name,
+              start: date,
+              allDay: true,
+              color: row.sheetName === "Public Sector" ? "#ff9800" :
+                row.sheetName === "Manufacturing Sector" ? "#2196f3" :
+                  "#9c27b0",
+              extendedProps: {
+                email: row.Email,
+                judgeNumber: row['Judges Id'],
+                time: row['Time Stamp'],
+                sector: row.Sector,
+                allDates: datesArray.join(", "),
+                sheetName: row.sheetName
+              }
+            });
+          });
+        });
+        allEvents = [...allEvents, ...events];
+      }
+
+      renderFilteredEvents();
+      refreshSheetData();
+      setInterval(refreshSheetData,15000)
+      document.querySelector(".loading").style.display = "none";
+      document.getElementById("calendar").style.display = "block";
+      // loader hide
+      document.querySelector(".loading").style.display = "none";
+      document.getElementById("calendar").style.display = "block";
+
+      // Keep filters functional
+      document.getElementById('searchName').addEventListener('input', function () {
+        renderFilteredEvents(this.value, document.getElementById('filterSheet').value);
+      });
+      document.getElementById('filterSheet').addEventListener('change', function () {
+        renderFilteredEvents(document.getElementById('searchName').value, this.value);
+      });
+      
+    });
+  </script>
 
 </body>
+
 </html>
