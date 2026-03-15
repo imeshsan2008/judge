@@ -24,7 +24,11 @@ button:hover{ background:#932F2F; }
 <body>
 
 <div class="container">
-  <div class="title" style="color: #932F2F;">Judge Booking Calendar</div>
+  <div class="title" style="color: #932F2F;">Judge Booking Calendar <div id="legend" style="margin-top:20px; text-align:center; font-size:14px; color:#666;">
+  <span style="display:inline-block; width:15px; height:15px; background:#ff9800; margin-right:5px; border-radius:3px;"></span> Public Sector
+  <span style="display:inline-block; width:15px; height:15px; background:#2196f3; margin-right:5px; margin-left:10px; border-radius:3px;"></span> Manufacturing Sector
+  <span style="display:inline-block; width:15px; height:15px; background:#9c27b0; margin-right:5px; margin-left:10px; border-radius:3px;"></span> School Sector
+</div></div>
   <div id="bookingCount">0 / 200 judges booked</div>
 
   <div id="filters">
@@ -39,7 +43,6 @@ button:hover{ background:#932F2F; }
     </select>
   </div>
 
-  <button id="loadSheet" style="display: none;">Load Data</button>
   <div id="calendarWrapper">
     <div id="calendar"></div>
   </div>
@@ -48,11 +51,7 @@ button:hover{ background:#932F2F; }
 </footer>
 </div>
 
-<div id="legend" style="margin-top:20px; text-align:center; font-size:14px; color:#666;">
-  <span style="display:inline-block; width:15px; height:15px; background:#ff9800; margin-right:5px; border-radius:3px;"></span> Public Sector
-  <span style="display:inline-block; width:15px; height:15px; background:#2196f3; margin-right:5px; margin-left:10px; border-radius:3px;"></span> Manufacturing Sector
-  <span style="display:inline-block; width:15px; height:15px; background:#9c27b0; margin-right:5px; margin-left:10px; border-radius:3px;"></span> School Sector
-</div>
+
 
 <script>
 document.addEventListener('DOMContentLoaded', async function() {
@@ -60,7 +59,8 @@ document.addEventListener('DOMContentLoaded', async function() {
   const bookingCountEl = document.getElementById('bookingCount');
   const MAX_JUDGES = 200;
   let allEvents = [];
-
+const minDate = '2026-03-23';
+const maxDate = '2026-04-10';
   const calendar = new FullCalendar.Calendar(calendarEl, {
     initialView: 'dayGridMonth',
     headerToolbar:{
@@ -68,6 +68,11 @@ document.addEventListener('DOMContentLoaded', async function() {
       center:'title',
       right:'dayGridMonth,timeGridWeek'
     },
+   validRange:{
+start:minDate,
+end: new Date(new Date(maxDate).setDate(new Date(maxDate).getDate() + 1))
+
+},
     events: [],
     eventClick: function(info){
       const judge = info.event.extendedProps;
