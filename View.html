@@ -3,7 +3,8 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>Judge Booking Calendar (Google Sheet)</title>
+  <title>Judge Booking Calendar Dashboard</title>
+  <link rel="shortcut icon" href="https://productivity.lk/templates/temp_2019/favicon.ico" type="image/x-icon">
 
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.20/index.global.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -184,17 +185,53 @@ transition:width .6s ease;
   transform: scale(1.05);
   transition: all 0.3s ease;
   cursor: pointer;
+}/* Mobile */
+@media(max-width:600px){
+   nav img {height: 60px; width: 100%;}
+     .mainContainer {
+    flex-direction: column; /* stack vertically */
+    margin: 10px;
+  }
+}
+/* Nav bar with logo centered */
+nav {
+    background-color: #932F2F;
+    height: 80px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: sticky;
+    width: 100%;
+    border-radius: 12px 12px 0px 0px;
+    top: 0;
+    z-index: 100;
+}
+
+nav img {
+    height: 100%;
+    justify-content: center;
+    align-items: center;
+
+    margin: 0 auto;
+    padding: 5px;
 }
   </style>
 </head>
 
-<body>
+<body><!-- Nav bar with centered logo -->
+
   <div class="loading" style="width: 100%; height: 100%;">
     <div class="spinner"></div>
   </div>
+  <div>
+   <nav>
+    <img src="https://productivity.lk/templates/temp_2019/images/new/logo.png" alt="Logo" >
+   
+</nav>
   <div class="container">
-    <div class="title" style="color: #932F2F;">Judge Booking Calendar <div id="legend"
-        style="margin-top:20px; text-align:center; font-size:14px; color:#666;">
+   
+    <div class="title" style="color: #932F2F;">Judge Booking Calendar Dashboard
+      <div id="legend" style="margin-top:20px; text-align:center; font-size:14px; color:#666;">
         <span
           style="display:inline-block; width:15px; height:15px; background:#ff9900; margin-right:5px; border-radius:3px;"></span>
         Public Sector
@@ -288,7 +325,7 @@ transition:width .6s ease;
           href="https://vexora.lk">Vexora IT Solutions</a></p>
     </footer>
   </div>
-
+</div>
 
 
   <script>

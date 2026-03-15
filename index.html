@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Judge Booking Calendar</title>
+  <link rel="shortcut icon" href="https://productivity.lk/templates/temp_2019/favicon.ico" type="image/x-icon">
+
 
 <!-- FullCalendar CSS & JS -->
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.20/index.global.min.js"></script>
@@ -152,6 +154,7 @@ nav img {
 
 /* Mobile */
 @media(max-width:600px){
+  
     .title { font-size: 22px; }
     .fc-toolbar-title { font-size: 16px !important; }
     .submitBtn { font-size: 16px; padding: 12px; }
@@ -208,7 +211,7 @@ Welcome! Use this calendar to select your available dates to participate in the 
     <label for="judgeMemberId">NIC Number:</label>
     <p id="judgeMemberIdDisplay" ></p>
 
-    <label for="selectedDates" style="">Selected Dates:</label>
+    <label for="selectedDates" >Selected Dates:</label>
     <p id="selectedDatesDisplay" style="font-weight: bold;  word-wrap: break-word;"></p>
   </div>
 </div>
@@ -238,9 +241,8 @@ document.addEventListener('DOMContentLoaded', function(){
     document.getElementById('sector').innerText = sector.toLocaleUpperCase().charAt(0) + sector.slice(1) + " Sector";
   }
 
+  // const Webhook = 'https://npsjudge.app.n8n.cloud/webhook-test/8bec9b74-f561-4c4c-89ba-d18d04e4ba67';
   const Webhook = 'https://npsjudge.app.n8n.cloud/webhook/8bec9b74-f561-4c4c-89ba-d18d04e4ba67';
-    // https://npsjudge.app.n8n.cloud/webhook/8bec9b74-f561-4c4c-89ba-d18d04e4ba67
-  // const Webhook = 'https://npsjudge.app.n8n.cloud/webhook-test/8bec9b74-f561-4c4c-89ba-d18d04e4ba67'
   
 function showBookingDetails() {
     if (localStorage.getItem('name') && localStorage.getItem('email') && localStorage.getItem('judgeMemberId')) {
@@ -443,7 +445,7 @@ const judge_formated = judge.trim();
 
 
 // Old NIC: 9 digits + V/v/X/x (10 chars), New NIC: 12 digits
-if (!(/^([0-9]{9}[vVxX])$/.test(judge_formated) || /^[0-9]{12}$/.test(judge_formated))) {
+if (/^[0-9]{9}[vVxX]$/.test(judge_formated) || /^[0-9]{12}$/.test(judge_formated))) {
   Swal.showValidationMessage("Please enter a valid NIC Number");
 }
 
@@ -474,6 +476,7 @@ judge_number:result.value.judge,
 dates:selectedDates,
 time:result.value.CurrentTime,
 sector:result.value.sector
+
 })
 
 })

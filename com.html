@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Booking Confirmation</title>
+</head>
+<body style="font-family: Arial, sans-serif; background-color: #e2e2e2; margin:0; padding:0;">
+
+  <!-- Main container -->
+  <table align="center" width="600" cellpadding="0" cellspacing="0" style="background-color:#ffffff; border-radius:8px; overflow:hidden; margin-top:30px; box-shadow:0 5px 15px rgba(0,0,0,0.1);">
+
+    <!-- Header with dark red background and logo -->
+    <tr>
+      <td style="background-color:#932F2F; padding:20px; text-align:center;">
+        <img src="https://productivity.lk/templates/temp_2019/images/new/logo.png" alt="Logo" style="height:60px;">
+      </td>    
+    </tr>
+
+    <!-- Title -->
+<tr>
+  <td style="padding:25px; text-align:center; font-family: Arial, sans-serif;">
+
+    <h1 style="font-size:26px; font-weight:700; color:#333; margin:0 0 10px;">
+      National Productivity Awards 2025/26
+    </h1>
+
+    <p style="font-size:18px; font-weight:600; color:#333; margin:0 0 20px;">
+      Available Dates to Participate in Desktop Evaluation
+    </p>
+
+    <h2 style="color:#932F2F; font-size:22px; margin:0 0 10px;">
+      Booking Confirmed!
+    </h2>
+
+    <p style="color:#555; font-size:16px; margin:0;">
+      Your booking has been successfully registered.
+    </p>
+
+  </td>
+</tr>
+
+    <!-- Booking Details -->
+    <tr>
+      <td style="padding:20px;">
+        <table width="100%" cellpadding="5" cellspacing="0" style="border-collapse:collapse;">
+          <tr>
+            <td style="font-weight:bold; width:150px; color:#555;">Name:</td>
+            <td style="color:#333;">{{ $('Webhook').item.json.body.name }}</td>
+          </tr>
+          <tr>
+            <td style="font-weight:bold; width:150px; color:#555;">Sector:</td>
+          <td style="color:#333;">{{ $('Webhook').item.json.body.sector.charAt(0).toUpperCase() + $('Webhook').item.json.body.sector.slice(1) }} Sector</td>          </tr>
+          <tr>
+            <td style="font-weight:bold; color:#555;">Email:</td>
+            <td style="color:#333;">{{ $('Webhook').item.json.body.email }}</td>
+          </tr>
+          <tr>
+            <td style="font-weight:bold; color:#555;">Judge Number:</td>
+            <td style="color:#333;">{{ $('Webhook').item.json.body.judge_number }}</td>
+          </tr>
+          <tr>
+            <td style="font-weight:bold; color:#555; vertical-align:top;">Selected Dates:</td>
+            <td>
+              <ul style="margin:0; padding-left:20px; color:#932F2F; background-color: #f0f2f5; list-style-type: disc;">
+                {{ $('Webhook').item.json.body.dates }}
+              </ul>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+
+    <!-- Footer -->
+    <tr>
+      <td style="background-color:#f0f2f5; text-align:center; padding:15px; color:#888; font-size:12px;">
+        &copy; 2026 All rights reserved.
+      </td>
+    </tr>
+  </table>
+
+</body>
+</html>
