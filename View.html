@@ -351,10 +351,8 @@ bar.style.background="#4f46e5"
 }
 
 }
-async function refreshSheetData(){
 
-// save scroll position
-let scrollPos = window.scrollY;
+async function refreshSheetData(){
 
 allEvents = [];
 
@@ -561,7 +559,9 @@ updateCard(uniqueSchool.size, MAX_JUDGES, 'schoolSectorCount', 'progressSchool')
       }
 
       renderFilteredEvents();
+      
       refreshSheetData();
+
       setInterval(refreshSheetData,15000)
       document.querySelector(".loading").style.display = "none";
       document.getElementById("calendar").style.display = "block";
